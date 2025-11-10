@@ -1,0 +1,7 @@
+{
+  "name": "CalorieQuest: Your Food's Existential Crisis.",
+  "description": "Because counting calories shouldn’t feel like filing taxes. A modern, AI-powered nutrition tracker that lets you log meals, talk to an AI that won’t judge you for eating pizza three days in a row (probably), and generally get your life together. Or at least, your diet.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
