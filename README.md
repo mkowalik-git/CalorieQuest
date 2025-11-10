@@ -75,7 +75,7 @@ Our app needs to talk to Google's big AI brain. To do that, it needs a secret pa
 
 1.  **Get the Key:**
     *   Open your web browser (Chrome, Firefox, etc.).
-    *   Go to this website: [https://aistudio.google.com/](https://aistudio.google.com/)
+    *   Go to this website: (https://aistudio.google.com/api-keys)
     *   You might need to sign in with your Google account. Do it.
     *   Look for a button that says something like **"Get API Key"**. It's usually on the top left. Click it.
     *   A new window will pop up with an option to **"Create API key"**. Click that.
