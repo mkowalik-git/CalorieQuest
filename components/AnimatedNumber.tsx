@@ -9,6 +9,7 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value }) => {
   const frameRef = useRef<number | undefined>();
   const prevValueRef = useRef(value);
 
+  // Fix: Pass the animation frame ID to cancelAnimationFrame to prevent memory leaks.
   useEffect(() => {
     const startValue = prevValueRef.current;
     const endValue = value;
@@ -32,14 +33,12 @@ export const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value }) => {
     };
 
     if (frameRef.current) {
-      // FIX: Pass the animation frame ID to cancelAnimationFrame.
       cancelAnimationFrame(frameRef.current);
     }
     frameRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (frameRef.current) {
-        // FIX: Pass the animation frame ID to cancelAnimationFrame for cleanup.
         cancelAnimationFrame(frameRef.current);
       }
       prevValueRef.current = value;

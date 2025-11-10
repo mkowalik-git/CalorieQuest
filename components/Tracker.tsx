@@ -49,11 +49,11 @@ const CalorieProgress: React.FC<{ current: number; goal: number; setGoal: (goal:
     const [animate, setAnimate] = useState(false);
     const prevCurrentRef = useRef<number>();
     
+    // Fix: Pass the timer ID to clearTimeout to prevent errors and memory leaks.
     useEffect(() => {
         if (prevCurrentRef.current !== undefined && prevCurrentRef.current !== current) {
             setAnimate(true);
             const timer = setTimeout(() => setAnimate(false), 400);
-            // FIX: Pass the timer ID to clearTimeout to prevent errors and memory leaks.
             return () => clearTimeout(timer);
         }
         prevCurrentRef.current = current;
@@ -143,11 +143,11 @@ const MacroProgress: React.FC<{ label: string; current: number; goal: number; se
     const [animate, setAnimate] = useState(false);
     const prevCurrentRef = useRef<number>();
 
+    // Fix: Pass the timer ID to clearTimeout to prevent errors and memory leaks.
     useEffect(() => {
         if (prevCurrentRef.current !== undefined && prevCurrentRef.current !== current) {
             setAnimate(true);
             const timer = setTimeout(() => setAnimate(false), 400); // Animation duration
-            // FIX: Pass the timer ID to clearTimeout to prevent errors and memory leaks.
             return () => clearTimeout(timer);
         }
         prevCurrentRef.current = current;
@@ -314,11 +314,11 @@ export const Tracker: React.FC<TrackerProps> = ({ foodItems, addFoodItem, remove
   const [animateWater, setAnimateWater] = useState(false);
   const prevWaterIntakeRef = useRef<number | undefined>();
 
+  // Fix: Pass the timer ID to clearTimeout to prevent errors and memory leaks.
   useEffect(() => {
     if (lastAddedId) {
         setShowConfetti(true);
         const timer = setTimeout(() => setShowConfetti(false), 4000); // Confetti lasts for 4 seconds
-        // FIX: Pass the timer ID to clearTimeout to prevent errors and memory leaks.
         return () => clearTimeout(timer);
     }
   }, [lastAddedId]);
