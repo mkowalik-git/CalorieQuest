@@ -1,6 +1,7 @@
-# CalorieQuest: Your Food's Existential Crisis.
+# CalorieQuest
+**Because counting calories shouldn’t feel like filing your taxes.** 
 
-**Because counting calories shouldn’t feel like filing your taxes. A modern, AI-powered nutrition tracker that lets you log meals, talk to an AI that won’t judge you for eating pizza three days in a row (probably), and generally get your life together. Or at least, your diet.**
+A modern, AI-powered nutrition tracker that lets you log meals, talk to an AI that won’t judge you for eating pizza three days in a row (probably), and generally get your life together. Or at least, your diet.**
 
 <img width="1021" height="928" alt="image" src="https://github.com/user-attachments/assets/760af2b6-2d03-4b4b-8efe-f907236824e3" />
 
