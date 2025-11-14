@@ -7,6 +7,30 @@ import { SparklesIcon } from './icons/SparklesIcon';
 import { CameraIcon } from './icons/CameraIcon';
 import { PlusIcon } from './icons/PlusIcon';
 
+const extractJson = (text: string) => {
+  // Find the first complete JSON object
+  const start = text.indexOf('{');
+  if (start === -1) throw new Error("No JSON found");
+
+  let braceCount = 0;
+  let end = start;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '{') braceCount++;
+    if (text[i] === '}') braceCount--;
+    if (braceCount === 0) {
+      end = i;
+      break;
+    }
+  }
+
+  if (braceCount !== 0) throw new Error("Invalid JSON structure");
+
+  const jsonStr = text.substring(start, end + 1);
+  // Clean up any non-ASCII characters that might cause parsing issues
+  const cleanJsonStr = jsonStr.replace(/[^\x20-\x7E\n\r\t]/g, '');
+  return JSON.parse(cleanJsonStr);
+};
+
 interface AddFoodModalProps {
   onClose: () => void;
   onAddFood: (item: Omit<FoodItem, 'id'>) => void;
@@ -142,14 +166,18 @@ export const AddFoodModal: React.FC<AddFoodModalProps> = ({ onClose, onAddFood, 
     setTextAnalysisResult(null);
     try {
       const result = await geminiService.analyzeMeal(analysisText);
-      const parsedResult = JSON.parse(result);
-      if (!parsedResult || !parsedResult.name || !parsedResult.calories) {
-          throw new Error("Incomplete analysis data received from AI.");
-      }
+      let parsedResult = extractJson(result);
+      parsedResult = {
+        name: parsedResult.name || 'Unknown Meal',
+        calories: parsedResult.calories || 0,
+        protein: parsedResult.protein || 0,
+        carbs: parsedResult.carbs || 0,
+        fat: parsedResult.fat || 0,
+        servingSize: (parsedResult.servingSize || '1 serving').replace(/[^\x20-\x7E]/g, '').trim() || '1 serving'
+      };
       setTextAnalysisResult(parsedResult);
-    } catch (e) {
-      console.error("Failed to analyze meal:", e);
-      setTextAnalysisError('Could not analyze the description. Please try being more specific about the ingredients and quantities.');
+    } catch (e: any) {
+      setTextAnalysisError(e.message || 'Could not analyze the description. Please try being more specific about the ingredients and quantities.');
     } finally {
       setIsAnalyzingText(false);
     }
@@ -165,15 +193,18 @@ export const AddFoodModal: React.FC<AddFoodModalProps> = ({ onClose, onAddFood, 
     setImageAnalysisResult(null);
     try {
       const result = await geminiService.analyzeMealImage(imageFile);
-      const parsedResult = JSON.parse(result);
-       if (!parsedResult || !parsedResult.name || !parsedResult.calories) {
-        // This handles cases where the model returns an empty or incomplete object.
-        throw new Error("Incomplete analysis data received from AI.");
-      }
+      let parsedResult = extractJson(result);
+      parsedResult = {
+        name: parsedResult.name || 'Unknown Meal',
+        calories: parsedResult.calories || 0,
+        protein: parsedResult.protein || 0,
+        carbs: parsedResult.carbs || 0,
+        fat: parsedResult.fat || 0,
+        servingSize: (parsedResult.servingSize || '1 serving').replace(/[^\x20-\x7E]/g, '').trim() || '1 serving'
+      };
       setImageAnalysisResult(parsedResult);
-    } catch (e) {
-      console.error("Failed to analyze image:", e);
-      setImageAnalysisError('Could not analyze the image. The food might not be recognizable. Please try a different angle or better lighting.');
+    } catch (e: any) {
+      setImageAnalysisError(e.message || 'Could not analyze the image. The food might not be recognizable. Please try a different angle or better lighting.');
     } finally {
       setIsAnalyzingImage(false);
     }
@@ -193,9 +224,8 @@ export const AddFoodModal: React.FC<AddFoodModalProps> = ({ onClose, onAddFood, 
         setSearchError('No results found. Try a different search term.');
       }
       setSearchResults(results);
-    } catch (e) {
-      console.error("Failed to search food:", e);
-      setSearchError('Could not perform search. Please try again.');
+    } catch (e: any) {
+      setSearchError(e.message || 'Could not perform search. Please try again.');
     } finally {
       setIsSearching(false);
     }

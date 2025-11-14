@@ -67,9 +67,8 @@ export const Database: React.FC<DatabaseProps> = ({ addFoodItem }) => {
         setError("The archives returned nothing. Either this food is a myth, or you spelled it wrong. Let's assume the latter.");
       }
       setResults(searchResults);
-    } catch (e) {
-      console.error(e);
-      setError('An error occurred during the search. Please try again.');
+    } catch (e: any) {
+      setError(e.message || 'An error occurred during the search. Please try again.');
     } finally {
       setIsLoading(false);
     }

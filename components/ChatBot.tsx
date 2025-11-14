@@ -71,9 +71,9 @@ export const ChatBot: React.FC = () => {
         const response = await getChatResponse(history, input);
         const modelMessage: ChatMessage = { role: 'model', parts: [{text: response.text}]};
         setMessages(prev => [...prev, modelMessage]);
-    } catch (error) {
-        console.error('Error getting response from Gemini:', error);
-        const errorMessage: ChatMessage = { role: 'model', parts: [{text: 'Sorry, I encountered an error. Please try again.'}]};
+    } catch (error: any) {
+        const errorText = error.message || 'Sorry, I encountered an error. Please try again.';
+        const errorMessage: ChatMessage = { role: 'model', parts: [{text: errorText}]};
         setMessages(prev => [...prev, errorMessage]);
     } finally {
         setIsLoading(false);

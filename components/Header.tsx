@@ -30,6 +30,16 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
           <div className="flex items-center text-2xl font-bold text-neutral mb-4 md:mb-0">
             <SparklesIcon className="w-8 h-8 text-brand mr-2"/>
             CalorieQuest
+            <button
+              onClick={() => {
+                localStorage.removeItem('onboardingComplete');
+                window.location.reload();
+              }}
+              className="ml-4 text-xs bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+              title="Reset Onboarding"
+            >
+              Reset
+            </button>
           </div>
           <nav className="flex flex-wrap justify-center space-x-1 sm:space-x-2 bg-base-300 p-1 rounded-full">
             {tabs.map((tab) => {

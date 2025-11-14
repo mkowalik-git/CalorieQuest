@@ -47,7 +47,7 @@ const SuggestedPlanModal: React.FC<{
 }> = ({ plan, targetDate, onClose, onApply }) => {
     
     const totals = useMemo(() => {
-        return Object.values(plan).flat().reduce((acc, item) => {
+        return Object.values(plan).flat().filter((meals): meals is SuggestedMeal[] => Array.isArray(meals)).flat().reduce((acc, item) => {
             acc.calories += item.calories;
             acc.protein += item.protein;
             acc.carbs += item.carbs;
@@ -96,11 +96,15 @@ const SuggestedPlanModal: React.FC<{
 export const Planner: React.FC<PlannerProps> = (props) => {
   const [startOfWeek, setStartOfWeek] = useState(getStartOfWeek(new Date()));
   const [modalState, setModalState] = useState<{ open: boolean; date: Date | null; mealType: MealType | null }>({ open: false, date: null, mealType: null });
-  
+
   const [suggestedPlan, setSuggestedPlan] = useState<SuggestedMealPlan | null>(null);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [suggestionError, setSuggestionError] = useState('');
   const [suggestionTargetDate, setSuggestionTargetDate] = useState<Date | null>(null);
+
+  const [weeklyPlan, setWeeklyPlan] = useState<Record<string, SuggestedMealPlan> | null>(null);
+  const [isSuggestingWeekly, setIsSuggestingWeekly] = useState(false);
+  const [weeklySuggestionError, setWeeklySuggestionError] = useState('');
 
 
   const weekDays = useMemo(() => {
@@ -143,9 +147,8 @@ export const Planner: React.FC<PlannerProps> = (props) => {
             props.fatGoal
         );
         setSuggestedPlan(plan);
-    } catch (e) {
-        console.error(e);
-        setSuggestionError('Could not generate a meal plan. Please try again.');
+    } catch (e: any) {
+        setSuggestionError(e.message || 'Could not generate a meal plan. Please try again.');
     } finally {
         setIsSuggesting(false);
     }
@@ -155,13 +158,13 @@ export const Planner: React.FC<PlannerProps> = (props) => {
     Object.entries(plan).forEach(([mealType, meals]) => {
       (meals as SuggestedMeal[]).forEach(meal => {
         const { value, unit } = parseServingSize(meal.servingSize);
-        props.addMealToPlan(date, { 
+        props.addMealToPlan(date, {
             name: meal.name,
             calories: meal.calories,
             protein: meal.protein,
             carbs: meal.carbs,
             fat: meal.fat,
-            quantity: 1, 
+            quantity: 1,
             mealType: mealType as MealType,
             servingValue: value,
             servingUnit: unit,
@@ -170,6 +173,58 @@ export const Planner: React.FC<PlannerProps> = (props) => {
     });
     setSuggestedPlan(null);
     setSuggestionTargetDate(null);
+  };
+
+  const handleSuggestWeeklyPlan = async () => {
+    setIsSuggestingWeekly(true);
+    setWeeklySuggestionError('');
+    setWeeklyPlan(null);
+    try {
+        const plan = await geminiService.suggestWeeklyMealPlan(
+            props.calorieGoal,
+            props.proteinGoal,
+            props.carbsGoal,
+            props.fatGoal
+        );
+        setWeeklyPlan(plan);
+    } catch (e: any) {
+        setWeeklySuggestionError(e.message || 'Could not generate a weekly meal plan. Please try again.');
+    } finally {
+        setIsSuggestingWeekly(false);
+    }
+  };
+
+  const handleApplyWeeklyPlan = () => {
+    if (!weeklyPlan) return;
+
+    weekDays.forEach((date, index) => {
+      const dayKey = `Day${index + 1}`;
+      const dayPlan = weeklyPlan[dayKey];
+      if (dayPlan) {
+        Object.entries(dayPlan).forEach(([mealType, meals]) => {
+          (meals as SuggestedMeal[]).forEach(meal => {
+            const { value, unit } = parseServingSize(meal.servingSize);
+            props.addMealToPlan(date, {
+                name: meal.name,
+                calories: meal.calories,
+                protein: meal.protein,
+                carbs: meal.carbs,
+                fat: meal.fat,
+                quantity: 1,
+                mealType: mealType as MealType,
+                servingValue: value,
+                servingUnit: unit,
+            });
+          });
+        });
+      }
+    });
+    setWeeklyPlan(null);
+  };
+
+  const clearWeeklyPlan = () => {
+    setWeeklyPlan(null);
+    setWeeklySuggestionError('');
   };
   
   const weekFormatter = new Intl.DateTimeFormat('en-US', {
@@ -181,6 +236,64 @@ export const Planner: React.FC<PlannerProps> = (props) => {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg">
+      {/* Weekly Plan Section */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-primary/20">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-neutral mb-1">Weekly Meal Planning</h3>
+            <p className="text-sm text-gray-600">Get AI-generated meal plans for the entire week</p>
+            {weeklySuggestionError && (
+              <p className="text-sm text-red-600 mt-1">{weeklySuggestionError}</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {!weeklyPlan && (
+              <button
+                onClick={handleSuggestWeeklyPlan}
+                disabled={isSuggestingWeekly}
+                className="bg-gradient-primary text-white font-bold py-2 px-6 rounded-lg transition duration-300 shadow-md hover:shadow-lg disabled:opacity-70 flex items-center gap-2"
+              >
+                {isSuggestingWeekly ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <SparklesIcon className="w-5 h-5" />
+                    Suggest Weekly Plan
+                  </>
+                )}
+              </button>
+            )}
+            {weeklyPlan && (
+              <>
+                <button
+                  onClick={handleApplyWeeklyPlan}
+                  className="bg-gradient-success text-white font-bold py-2 px-6 rounded-lg transition duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <CalendarPlusIcon className="w-5 h-5" />
+                  Apply to Week
+                </button>
+                <button
+                  onClick={clearWeeklyPlan}
+                  className="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300 hover:bg-gray-600"
+                >
+                  Clear
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+        {weeklyPlan && (
+          <div className="mt-4 p-3 bg-white rounded-lg border">
+            <p className="text-sm text-gray-600">
+              Weekly plan ready with {Object.keys(weeklyPlan).length} days of meals. Click "Apply to Week" to populate all days, or modify individual days manually.
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between mb-6">
         <button onClick={() => changeWeek('prev')} className="p-2 rounded-full hover:bg-base-200 transition" aria-label="Previous week">
           <ChevronLeftIcon className="w-6 h-6 text-neutral" />
